@@ -3,8 +3,10 @@
 > **Fork of [svkozak/pi-acp](https://github.com/svkozak/pi-acp)** published as
 > **`@jhillyerd/pi-acp`** (bin `pi-acp-mcp`). It carries one feature upstream
 > declined in [#67](https://github.com/svkozak/pi-acp/pull/67): wiring ACP
-> `mcpServers` through to pi's built-in MCP support. Everything else tracks
-> upstream; rebase `main` onto `upstream/main` to pick up changes.
+> `mcpServers` through to pi's built-in MCP support. This is an independent
+> fork — it no longer tracks upstream; changes are cherry-picked manually if
+> ever needed. All credit for the original adapter goes to the upstream
+> author (MIT).
 
 ## What the fork adds: ACP MCP servers -> pi's built-in MCP
 
@@ -51,7 +53,7 @@ npm run smoke:mcp   # end-to-end: ACP session/new -> pi connects to a stdio MCP 
 
 ---
 
-# pi-acp (upstream README below)
+# pi-acp (original README, retained for reference)
 
 ACP ([Agent Client Protocol](https://agentclientprotocol.com/overview/introduction)) adapter for [`pi`](https://github.com/earendil-works/pi) coding agent (fka shitty coding agent).
 
@@ -252,7 +254,7 @@ Project layout:
 ## Limitations
 
 - No ACP filesystem delegation (`fs/*`) and no ACP terminal delegation (`terminal/*`). pi reads/writes and executes locally.
-- MCP servers from ACP params are wired through to pi's built-in MCP support by this fork (see the fork notes at the top); upstream pi-acp stores them without wiring.
+- MCP servers from ACP params are wired through to pi's built-in MCP support by this fork (see the fork notes at the top); the original pi-acp stores them without wiring.
 - Assistant streaming is currently sent as `agent_message_chunk` (no separate thought stream).
 - Queue is implemented client-side and should work like pi's `one-at-a-time`
 - ~~ACP clients don't yet suport session history, but ACP sessions from `pi-acp` can be `/resume`d in pi directly~~

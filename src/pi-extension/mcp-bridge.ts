@@ -65,7 +65,9 @@ export function registerEnvMcpServers(pi: PiLike, env: NodeJS.ProcessEnv = proce
   if (servers.length === 0) return
 
   if (typeof pi.registerMcpServer !== 'function') {
-    fail('this pi version has no registerMcpServer API (pi with built-in MCP, 1.x+, is required); no MCP servers were registered')
+    fail(
+      'this pi version has no registerMcpServer API (pi with built-in MCP, 1.x+, is required); no MCP servers were registered'
+    )
     return
   }
 

@@ -67,9 +67,7 @@ type PiRpcResponse = {
 }
 
 type PiExtensionUiResponse =
-  | { id: string; value: string }
-  | { id: string; confirmed: boolean }
-  | { id: string; cancelled: true }
+  { id: string; value: string } | { id: string; confirmed: boolean } | { id: string; cancelled: true }
 
 export type PiRpcEvent = Record<string, unknown>
 
@@ -145,11 +143,13 @@ export function resolveMcpBridgePath(moduleUrl: URL): string | null {
 export function buildMcpExtensionArgs(
   entries: ReadonlyArray<PiMcpEntry> | undefined,
   bridgePath: string | null,
-  warn: (message: string) => void = (message) => console.error(message)
+  warn: (message: string) => void = message => console.error(message)
 ): string[] {
   if (!entries || entries.length === 0) return []
   if (!bridgePath) {
-    warn('pi-acp: MCP servers were requested but the bundled mcp-bridge extension was not found; continuing without them')
+    warn(
+      'pi-acp: MCP servers were requested but the bundled mcp-bridge extension was not found; continuing without them'
+    )
     return []
   }
   return ['--extension', bridgePath]

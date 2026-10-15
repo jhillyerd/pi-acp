@@ -380,14 +380,13 @@ export class PiAcpAgent implements ACPAgent {
           updateNotice
         })
 
-    if (preludeText)
-      session.setStartupInfo(preludeText)
+    if (preludeText) session.setStartupInfo(preludeText)
 
-      // Policy: within a single ACP connection (one client window), keep only one live pi subprocess.
-      // This avoids leaking subprocesses when clients start new sessions but don't explicitly close old ones.
-      // It does NOT affect other client windows because they run in separate agent processes.
-      //
-      // (Tests sometimes stub out `this.sessions`, so guard the call.)
+    // Policy: within a single ACP connection (one client window), keep only one live pi subprocess.
+    // This avoids leaking subprocesses when clients start new sessions but don't explicitly close old ones.
+    // It does NOT affect other client windows because they run in separate agent processes.
+    //
+    // (Tests sometimes stub out `this.sessions`, so guard the call.)
     ;(this.sessions as any).closeAllExcept?.(session.sessionId)
 
     const response = {
@@ -713,7 +712,7 @@ export class PiAcpAgent implements ACPAgent {
           return { stopReason: 'end_turn' }
         }
 
-        let text = ''
+        let text: string
         try {
           text = readFileSync(changelogPath, 'utf-8')
         } catch (e: any) {
@@ -797,7 +796,7 @@ export class PiAcpAgent implements ACPAgent {
         const safeSessionId = session.sessionId.replace(/[^a-zA-Z0-9_-]/g, '_')
         const outputPath = join(session.cwd, `pi-session-${safeSessionId}.html`)
 
-        let resultPath = ''
+        let resultPath: string
         try {
           const result = await session.proc.exportHtml(outputPath)
           resultPath = result.path
@@ -1316,8 +1315,6 @@ async function getModelState(
   currentModelId: string
 } | null> {
   // Ask pi for available models.
-  let availableModels: AdvertisedModel[] = []
-
   const data =
     pre?.availableModels ??
     (await (async () => {
@@ -1329,7 +1326,7 @@ async function getModelState(
     })())
 
   const models: any[] = Array.isArray(data?.models) ? data.models : []
-  availableModels = models
+  const availableModels = models
     .map(m => {
       const provider = String(m?.provider ?? '').trim()
       const id = String(m?.id ?? '').trim()

@@ -1,4 +1,57 @@
-# pi-acp
+# pi-acp (jhillyerd fork)
+
+> **Fork of [svkozak/pi-acp](https://github.com/svkozak/pi-acp)** published as
+> **`@jhillyerd/pi-acp`** (bin `pi-acp-mcp`). It carries one feature upstream
+> declined in [#67](https://github.com/svkozak/pi-acp/pull/67): wiring ACP
+> `mcpServers` through to pi's built-in MCP support. Everything else tracks
+> upstream; rebase `main` onto `upstream/main` to pick up changes.
+
+## What the fork adds: ACP MCP servers -> pi's built-in MCP
+
+ACP clients pass MCP servers in `session/new` / `session/load` params. This
+fork translates them and hands them to pi at spawn time:
+
+- stdio servers (`command`/`args`/`env`) and streamable HTTP servers
+  (`url`/`headers`) are supported
+- each pi spawn with servers gains `--extension <dist/mcp-bridge.js>` and a
+  `PI_ACP_MCP_SERVERS` env var; the bridge registers every server with
+  `pi.registerMcpServer()` (pi 1.x built-in MCP) while the session starts
+- nothing is written to `.pi/mcp.json` or `~/.pi/agent/mcp.json`: the bridge is
+  session-scoped, trust-free, and secrets stay in process env
+- `initialize` advertises `mcpCapabilities {http: true, sse: false}`
+- SSE and MCP-over-ACP transports are skipped with a stderr notice (pi rejects
+  legacy SSE)
+
+Sessions restored without MCP params (e.g. a config-only method respawning a
+dead session) come back without the servers; clients that resend servers on
+`session/load` (Kandev does) restore them.
+
+### Use with Kandev
+
+Kandev (custom ACP agent) needs no code changes:
+
+1. Install pi the canonical way (supports `pi update`):
+   `curl -fsSL https://pi.dev/install.sh | sh`
+2. Install the adapter: `npm install -g @jhillyerd/pi-acp`
+3. Kandev Settings -> Agents -> add custom agent, protocol **ACP**,
+   command `pi-acp-mcp`
+
+Kandev's agentctl injects its own `kandev` MCP server (ask_user_question and
+friends) into `session/new`, so it works on every executor type, including
+SSH/Docker/Kubernetes, without any project-local MCP config file.
+
+### Verify locally
+
+```bash
+npm install
+npm test
+npm run build
+npm run smoke:mcp   # end-to-end: ACP session/new -> pi connects to a stdio MCP server (needs `pi` on PATH)
+```
+
+---
+
+# pi-acp (upstream README below)
 
 ACP ([Agent Client Protocol](https://agentclientprotocol.com/overview/introduction)) adapter for [`pi`](https://github.com/earendil-works/pi) coding agent (fka shitty coding agent).
 
@@ -199,7 +252,7 @@ Project layout:
 ## Limitations
 
 - No ACP filesystem delegation (`fs/*`) and no ACP terminal delegation (`terminal/*`). pi reads/writes and executes locally.
-- MCP servers are accepted in ACP params and stored in session state, but not wired through to pi in this adapter. If you use [pi MCP adapter](https://github.com/nicobailon/pi-mcp-adapter) it will be available in the ACP client.
+- MCP servers from ACP params are wired through to pi's built-in MCP support by this fork (see the fork notes at the top); upstream pi-acp stores them without wiring.
 - Assistant streaming is currently sent as `agent_message_chunk` (no separate thought stream).
 - Queue is implemented client-side and should work like pi's `one-at-a-time`
 - ~~ACP clients don't yet suport session history, but ACP sessions from `pi-acp` can be `/resume`d in pi directly~~

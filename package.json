@@ -1,21 +1,23 @@
 {
-  "name": "pi-acp",
+  "name": "@jhillyerd/pi-acp",
   "version": "0.0.34",
-  "description": "ACP adapter for pi coding agent",
+  "description": "ACP adapter for pi coding agent (fork: wires ACP mcpServers to pi's built-in MCP)",
   "license": "MIT",
   "author": "Sergii Kozak <svkozak@gmail.com>",
+  "contributors": [
+    "James Hillyerd <james@hillyerd.com>"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/svkozak/pi-acp.git"
+    "url": "https://github.com/jhillyerd/pi-acp.git"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "bugs": {
-    "url": "https://github.com/svkozak/pi-acp/issues"
+    "url": "https://github.com/jhillyerd/pi-acp/issues"
   },
-  "homepage": "https://github.com/svkozak/pi-acp#readme",
+  "homepage": "https://github.com/jhillyerd/pi-acp#readme",
   "keywords": [
     "acp",
     "agent-client-protocol",
@@ -28,7 +30,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "pi-acp": "dist/index.js"
+    "pi-acp-mcp": "dist/index.js"
   },
   "files": [
     "dist"
@@ -42,6 +44,7 @@
     "lint": "eslint .",
     "test": "node --import tsx --test test/**/*.test.ts",
     "smoke": "node scripts/smoke-acp.mjs",
+    "smoke:mcp": "node scripts/smoke-acp-mcp.mjs",
     "prepack": "npm run build",
     "prepublishOnly": "npm run test && npm run build"
   },
@@ -61,5 +64,8 @@
     "tsx": "^4.0.0",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.18.0"
+  },
+  "allowScripts": {
+    "esbuild@0.27.2": true
   }
 }

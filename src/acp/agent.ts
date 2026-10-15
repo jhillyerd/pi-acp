@@ -43,6 +43,7 @@ import {
 import { promptToPiMessage, promptToSessionTitle } from './translate/prompt.js'
 import { loadSlashCommands, parseCommandArgs, toAvailableCommands } from './slash-commands.js'
 import { getAgentDir, getEnableSkillCommands, getQuietStartup } from './pi-settings.js'
+import { toMcpSpawnEntries } from './mcp/translate.js'
 import { toAvailableCommandsFromPiGetCommands } from './pi-commands.js'
 import { maybeAuthRequiredError } from './auth-required.js'
 import { isAbsolute } from 'node:path'
@@ -200,7 +201,8 @@ export class PiAcpAgent implements ACPAgent {
         proc = await PiRpcProcess.spawn({
           cwd,
           sessionPath: stored.sessionFile,
-          piCommand: process.env.PI_ACP_PI_COMMAND
+          piCommand: process.env.PI_ACP_PI_COMMAND,
+          mcpServers: toMcpSpawnEntries(opts?.mcpServers)
         })
       } catch (e: any) {
         if (e?.name === 'PiRpcSpawnError') {
@@ -255,7 +257,11 @@ export class PiAcpAgent implements ACPAgent {
       }),
       agentCapabilities: {
         loadSession: true,
-        mcpCapabilities: { http: false, sse: false },
+        // pi's built-in MCP support (pi 1.x+) consumes ACP-provided servers:
+        // each spawn with servers gains the bundled mcp-bridge extension and
+        // registers them via pi.registerMcpServer(). SSE stays off because pi
+        // rejects the legacy SSE transport.
+        mcpCapabilities: { http: true, sse: false },
         promptCapabilities: {
           image: true,
           audio: false,
@@ -281,7 +287,8 @@ export class PiAcpAgent implements ACPAgent {
     const fileCommands = loadSlashCommands(params.cwd)
     const enableSkillCommands = getEnableSkillCommands(params.cwd)
 
-    // Pi doesn't support mcpServers, but we accept and store.
+    // MCP servers are wired into the pi spawn via the bundled mcp-bridge
+    // extension (see SessionManager.create).
     const session = await this.sessions.create({
       cwd: params.cwd,
       mcpServers: params.mcpServers,

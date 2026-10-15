@@ -18,6 +18,7 @@ import {
   type PiRpcEvent,
   type PiSessionStats
 } from '../pi-rpc/process.js'
+import { toMcpSpawnEntries } from './mcp/translate.js'
 import { maybeAuthRequiredError } from './auth-required.js'
 import { SessionStore } from './session-store.js'
 import { expandSlashCommand, type FileSlashCommand } from './slash-commands.js'
@@ -214,7 +215,8 @@ export class SessionManager {
     try {
       proc = await PiRpcProcess.spawn({
         cwd: params.cwd,
-        piCommand: params.piCommand
+        piCommand: params.piCommand,
+        mcpServers: toMcpSpawnEntries(params.mcpServers)
       })
     } catch (e) {
       if (e instanceof PiRpcSpawnError) {

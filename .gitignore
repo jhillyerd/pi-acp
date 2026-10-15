@@ -9,3 +9,6 @@ dist
 
 /agentDocs
 .DS_Store
+
+# Local pi agent data when running pi inside this repo
+.pi/

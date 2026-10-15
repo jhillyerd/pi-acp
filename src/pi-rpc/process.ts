@@ -1,7 +1,10 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import * as readline from 'node:readline'
+import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import crossSpawn from 'cross-spawn'
 import { getPiCommand, shouldUseShellForPiCommand } from './command.js'
+import { MCP_SERVERS_ENV, type PiMcpEntry } from '../pi-extension/mcp-bridge.js'
 
 export class PiRpcSpawnError extends Error {
   /** Underlying spawn error code, e.g. ENOENT, EACCES */
@@ -103,6 +106,66 @@ type SpawnParams = {
   piCommand?: string
   /** If set, pi will persist the session to this exact file (via `--session <path>`). */
   sessionPath?: string
+  /**
+   * MCP servers translated from ACP `session/new` params. When non-empty the
+   * spawn gains `--extension <bundled mcp-bridge>` and a PI_ACP_MCP_SERVERS
+   * env var; the bridge registers the servers with pi's built-in MCP support
+   * while the session starts. See ../pi-extension/mcp-bridge.ts.
+   */
+  mcpServers?: PiMcpEntry[]
+}
+
+/**
+ * Resolve the bundled MCP bridge extension relative to this module.
+ *
+ * Candidates, in order:
+ * - `./mcp-bridge.js`: the bundled build (this module is inlined into
+ *   dist/index.js, so the bridge is a sibling in dist/)
+ * - `../pi-extension/mcp-bridge.ts`: running from source via tsx (pi loads
+ *   TypeScript extensions directly)
+ */
+export function resolveMcpBridgePath(moduleUrl: URL): string | null {
+  const candidates = [new URL('./mcp-bridge.js', moduleUrl), new URL('../pi-extension/mcp-bridge.ts', moduleUrl)]
+  for (const candidate of candidates) {
+    try {
+      const path = fileURLToPath(candidate)
+      if (existsSync(path)) return path
+    } catch {
+      // Not a file URL; try the next candidate.
+    }
+  }
+  return null
+}
+
+/**
+ * Build the `--extension` argv slice for the MCP bridge, or `[]` when there is
+ * nothing to register (no servers, or the bridge file is missing — reported
+ * through `warn` so the omission is visible instead of silent).
+ */
+export function buildMcpExtensionArgs(
+  entries: ReadonlyArray<PiMcpEntry> | undefined,
+  bridgePath: string | null,
+  warn: (message: string) => void = (message) => console.error(message)
+): string[] {
+  if (!entries || entries.length === 0) return []
+  if (!bridgePath) {
+    warn('pi-acp: MCP servers were requested but the bundled mcp-bridge extension was not found; continuing without them')
+    return []
+  }
+  return ['--extension', bridgePath]
+}
+
+/**
+ * Build the child env carrying the MCP server entries, or `null` when the
+ * parent env should be passed through unchanged. Values may hold secrets, so
+ * they travel in process env only, never on disk.
+ */
+export function buildMcpServersEnv(
+  entries: ReadonlyArray<PiMcpEntry> | undefined,
+  baseEnv: NodeJS.ProcessEnv = process.env
+): NodeJS.ProcessEnv | null {
+  if (!entries || entries.length === 0) return null
+  return { ...baseEnv, [MCP_SERVERS_ENV]: JSON.stringify(entries) }
 }
 
 export class PiRpcProcess {
@@ -161,13 +224,16 @@ export class PiRpcProcess {
     // (e.g. MCP extensions, prompt templates for workflows).
     const args = ['--mode', 'rpc', '--no-themes']
     if (params.sessionPath) args.push('--session', params.sessionPath)
+    args.push(...buildMcpExtensionArgs(params.mcpServers, resolveMcpBridgePath(new URL(import.meta.url))))
+
+    const spawnEnv = buildMcpServersEnv(params.mcpServers) ?? process.env
 
     // Windows cmd launchers need shell escaping; direct executables use native argv.
     const start = shouldUseShellForPiCommand(cmd) ? crossSpawn : spawn
     const child = start(cmd, args, {
       cwd: params.cwd,
       stdio: 'pipe',
-      env: process.env
+      env: spawnEnv
     }) as ChildProcessWithoutNullStreams
 
     // Ensure spawn failures (e.g. ENOENT when pi isn't installed) are surfaced as a

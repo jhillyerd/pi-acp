@@ -225,7 +225,7 @@ export class SessionManager {
       throw e
     }
 
-    let state: any = null
+    let state: any
     try {
       state = (await proc.getState()) as any
     } catch {
@@ -781,7 +781,6 @@ export class PiAcpSession {
                 }
               }
             } catch {
-              snapshotOldText = null
               this.fileSnapshots.set(toolCallId, { path: p, oldText: null })
             }
           }

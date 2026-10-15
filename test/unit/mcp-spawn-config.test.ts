@@ -20,7 +20,10 @@ test('buildMcpExtensionArgs: servers plus a bridge path yields --extension', () 
 
 test('buildMcpExtensionArgs: missing bridge path reports through warn and yields no args', () => {
   const warnings: string[] = []
-  assert.deepEqual(buildMcpExtensionArgs(entries, null, m => warnings.push(m)), [])
+  assert.deepEqual(
+    buildMcpExtensionArgs(entries, null, m => warnings.push(m)),
+    []
+  )
   assert.equal(warnings.length, 1)
   assert.match(warnings[0]!, /mcp-bridge/)
 })

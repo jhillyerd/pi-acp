@@ -45,9 +45,7 @@ function recordFromPairs(
  *   streamable HTTP endpoint instead.
  * - acp: MCP-over-ACP is an unstable ACP extension this adapter does not bridge.
  */
-export function translateAcpMcpServers(
-  servers: ReadonlyArray<McpServer> | undefined | null
-): McpTranslation {
+export function translateAcpMcpServers(servers: ReadonlyArray<McpServer> | undefined | null): McpTranslation {
   const entries: PiMcpEntry[] = []
   const skipped: SkippedMcpServer[] = []
   if (!servers || servers.length === 0) return { entries, skipped }
@@ -106,7 +104,7 @@ export function translateAcpMcpServers(
  */
 export function toMcpSpawnEntries(
   servers: ReadonlyArray<McpServer> | undefined | null,
-  warn: (message: string) => void = (message) => console.error(message)
+  warn: (message: string) => void = message => console.error(message)
 ): PiMcpEntry[] {
   const { entries, skipped } = translateAcpMcpServers(servers)
   for (const server of skipped) {

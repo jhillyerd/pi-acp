@@ -1,6 +1,6 @@
 {
   "name": "@jhillyerd/pi-acp",
-  "version": "0.0.34",
+  "version": "0.1.0",
   "description": "ACP adapter for pi coding agent (fork: wires ACP mcpServers to pi's built-in MCP)",
   "license": "MIT",
   "author": "Sergii Kozak <svkozak@gmail.com>",

@@ -13,6 +13,10 @@ updates:
         dependency-type: development
       production-dependencies:
         dependency-type: production
+    ignore:
+      # typescript-eslint peer range is <6.1.0; drop once it supports TS 7
+      - dependency-name: typescript
+        versions: ['7.x']
 
   - package-ecosystem: github-actions
     directory: /
